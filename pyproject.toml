@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "programmify"
+version = "0.0.1"
+description = "Quickly make a windows executable with a system tray icon and an configurable (read empty) PyQT5 window"
+readme = "README.md"
+authors = [{ name = "Torin Halsted", email = "modularizer@gmail.com" }]
+license = { file = "LICENSE" }
+keywords = ["program", "app", "icon", "system tray", "pyqt5", "windows", "executable", "pyinstaller"]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pyqt5",
+    "setproctitle",
+    "Pillow",
+    "pyinstaller",
+    "PyYAML",
+]
+
+[project.urls]
+Homepage = "https://github.com/modularizer/programmify"
+
+[project.scripts]
+programmify = "programmify:build"
+runify = "programmify:main"
+png2ico = "programmify:png2ico"
+
+
+
