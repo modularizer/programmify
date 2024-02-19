@@ -1,0 +1,6 @@
+include favicon.ico
+include README.md
+include LICENSE
+include requirements.txt
+include resources/*
+include samples/*

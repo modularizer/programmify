@@ -1,10 +1,10 @@
 # Programmify
 Quickly make a windows executable with a system tray icon and an configurable (read empty) PyQT5 window
 
-![Sample Widget](resources/full.png)
+![Sample Widget](https://raw.githubusercontent.com/modularizer/programmify/master/resources/full.png)
 
 Task Manager
-![Task Manager](resources/task_manager.png)
+![Task Manager](https://raw.githubusercontent.com/modularizer/programmify/master/resources/task_manager.png)
 
 **Yes! You can use your own icon**
 
