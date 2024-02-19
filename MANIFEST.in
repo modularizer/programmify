@@ -1,4 +1,4 @@
-include favicon.ico
+include src/programmify/favicon.ico
 include README.md
 include LICENSE
 include requirements.txt

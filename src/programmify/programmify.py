@@ -113,7 +113,7 @@ def detect_main_file(folder=Path.cwd()):
 def build():
     # if the first argument does not start with a hyphen, try to detect file to use
     # try main.py, __main__.py, or if there is only one .py file in the current directory, use it
-    if (len(sys.argv) <= 1) or sys.argv[1].startswith("-"):
+    if (len(sys.argv) <= 1) or sys.argv[1].startswith("-") and ("--help" not in sys.argv) and ("-h" not in sys.argv):
         file = detect_main_file()
         # insert the detected file as the first argument
         sys.argv.insert(1, file)
