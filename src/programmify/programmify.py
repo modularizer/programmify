@@ -139,7 +139,7 @@ def build():
     parser.add_argument("--show_cmd", action="store_true", help="Show the command that will be run instead of running it")
     parser.add_argument("--cmd", help="Expert level: command to run instead of pyinstaller")
     parser.add_argument("--hidden_imports", nargs="*", help="Hidden imports")
-    parser.add_argument("--extra_files", nargs="*", help="Extra files to include")
+    parser.add_argument("--extra-files", nargs="*", help="Extra files to include")
     parser.add_argument("--debug", action="store_false", help="Does not run in windowed mode, instead shows the terminal and stdout", dest="windowed")
     parser.add_argument("--args", nargs=argparse.REMAINDER, help="Additional arguments to pass to pyinstaller")
     parser.add_argument("--desktop", action="store_true", help="Copy the file to the desktop")
@@ -199,13 +199,14 @@ def _build(file: str = None,
                "--distpath", str(dst.parent.resolve()),
                f"--icon={icon}", "--add-data", f"{icon};programmify",
                "--add-data", f"{cfg_file};programmify",
+               "--add-data", f"{str(Path(__file__).parent / "subprocess_program.py")};programmify",
                "--add-data", f"{__file__};.",
                "--hidden-import", "setproctitle",
                "--hidden-import", "yaml"]
         if not windowed:
             cmd.remove("--windowed")
         for extra_file in extra_files or []:
-            cmd.extend(["--add-data", f"{extra_file};."])
+            cmd.extend(["--add-data", f"{extra_file};programmify"])
         for hidden_import in hidden_imports or []:
             cmd.extend(["--hidden-import", hidden_import])
         cmd.append(file)
@@ -287,7 +288,9 @@ To run the program:
 class Programmify:
     def __init__(self, name: str = default_name, icon: str = default_icon, **kwargs):
         if name is None:
-            raise ValueError(f"Program name cannot be None: {cfg_file}, {cfg_file.read_text() if cfg_file.exists() else None}")
+            name = default_name
+        if icon is None:
+            icon = default_icon
         super().__init__(**kwargs)
         self.trayIcon = QtWidgets.QSystemTrayIcon(self)
         self.name = self.set_name(name)
