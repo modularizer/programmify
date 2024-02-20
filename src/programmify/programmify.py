@@ -135,24 +135,26 @@ def build():
                         help="Path to a 16x16 .ico file. If not specified, will try to find favicon.ico or any other .ico or .png in the current working directory.")
     parser.add_argument("--mode", default=default_mode, help="Program mode: window or widget")
     parser.add_argument("--nocleanup", action="store_false", help="Cleanup build files", dest="cleanup")
-    parser.add_argument("--nopreclean", action="store_false", help="Preclean build files", dest="preclean")
     parser.add_argument("--show_cmd", action="store_true", help="Show the command that will be run instead of running it")
     parser.add_argument("--cmd", help="Expert level: command to run instead of pyinstaller")
     parser.add_argument("--hidden_imports", nargs="*", help="Hidden imports")
     parser.add_argument("--extra_files", nargs="*", help="Extra files to include")
     parser.add_argument("--debug", action="store_false", help="Does not run in windowed mode, instead shows the terminal and stdout", dest="windowed")
     parser.add_argument("--args", nargs=argparse.REMAINDER, help="Additional arguments to pass to pyinstaller")
+    parser.add_argument("--desktop", action="store_true", help="Copy the file to the desktop")
+    parser.add_argument("--version", help="Adds the version string to the end of the program name. e.g. --version 1 => my_program v1")
 
     args = parser.parse_args()
-    _build(file=args.file, name=args.name, dst=args.dst,
-           icon=args.icon, mode=args.mode, cleanup=args.cleanup, preclean=args.preclean,
+    _build(file=args.file, name=args.name, dst=args.dst, version=args.version,
+           icon=args.icon, mode=args.mode, cleanup=args.cleanup,
            hidden_imports=args.hidden_imports, extra_files=args.extra_files, windowed=args.windowed,
-           cmd=args.cmd, args=args.args)
+           cmd=args.cmd, args=args.args, desktop=args.desktop, show_cmd=args.show_cmd)
 
 
 def _build(file: str = None,
            name: str = default_name,
            dst: str = None,
+           version: str = None,
            icon: str = default_icon,
            mode: str = default_mode,
            args: list = None,
@@ -161,8 +163,9 @@ def _build(file: str = None,
            extra_files: list = None,
            windowed: bool = True,
            cleanup: bool = True,
-           preclean: bool = True,
-           show_cmd: bool = False):
+           show_cmd: bool = False,
+           desktop: bool = False
+           ):
     print(f"Building {file} as {name} with icon {icon}")
     if file in [".", "__file__"]:
         file = __file__
@@ -170,6 +173,8 @@ def _build(file: str = None,
         name = Path(file).stem
         if name in ["__main__", "main"]:
             name = Path(file).parent.name
+    if version:
+        name = f"{name} v{version}"
 
     if dst is None:
         dst = Path.cwd() / f"{name}.exe"
@@ -182,7 +187,6 @@ def _build(file: str = None,
 
     if icon.endswith(".png"):
         icon = png_to_ico(icon)
-
 
     # make a temporary config
     with open(cfg_file, "w") as f:
@@ -206,14 +210,16 @@ def _build(file: str = None,
         cmd.append(file)
     if args:
         cmd.extend(args)
-    return _build_from_cmd(cmd, dst, cleanup=cleanup, preclean=preclean, show_cmd=show_cmd)
+    src = dst.parent / f"{Path(file).stem}.exe"
+    return _build_from_cmd(cmd, src, dst, cleanup=cleanup, show_cmd=show_cmd, desktop=desktop)
 
 
 def _build_from_cmd(cmd: list,
+                    src,
                     dst,
                     cleanup: bool = True,
-                    preclean: bool = True,
-                    show_cmd: bool = False
+                    show_cmd: bool = False,
+                    desktop: bool = False
                     ):
 
     if isinstance(cmd, str):
@@ -225,7 +231,7 @@ def _build_from_cmd(cmd: list,
     import subprocess
 
     # preclean
-    if preclean:
+    if cleanup:
         shutil.rmtree("dist", ignore_errors=True)
         shutil.rmtree("build", ignore_errors=True)
         # remove all .spec files
@@ -251,6 +257,12 @@ def _build_from_cmd(cmd: list,
         RESET = "\033[0m"
         print(f"{RED}{BOLD}Failed to build {dst}{RESET}{RED}. Please check the error message above ^{RESET}.")
         sys.exit(1)
+
+    print(f"Built {dst}")
+    shutil.move(src, dst)
+    if desktop:
+        # copy the file to the desktop
+        shutil.copy(dst, Path.home() / "Desktop" / dst.name)
 
     # cleanup
     if cleanup:

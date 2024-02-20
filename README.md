@@ -16,6 +16,8 @@ Task Manager
 * [x] Executable name (in File Explorer & Task Manager)
 * [x] Executable file icon (in File Explorer & Task Manager)
 * [x] PyQT Widget OR PyQT Main Window
+* [x] executable with icon on desktop
+* [x] can be pinned to taskbar
 
 ### Support
 * [x] Windows
@@ -78,6 +80,11 @@ NOTES:
 8. Run
 An executable should have been created at `myprogram/myapp.exe`, double click to run!
 
+9. Add to desktop
+* just drag the `myapp.exe` to your desktop
+* double click to run
+* you can also pin it to your taskbar
+
 <hr/> 
 
 ## Usage:
@@ -90,26 +97,23 @@ programmify myapp.py --name testprogram --icon testicon.ico
 * add `--show_cmd` to show the `pyinstaller` command that will be run instead of running it (useful for debugging)
 
 ```commandline
-usage: programmify [-h] [--name NAME] [--dst DST] [--icon ICON] [--mode MODE] [--nocleanup] [--nopreclean] [--show_cmd] [--cmd CMD]
-                   [--hidden_imports [HIDDEN_IMPORTS ...]] [--extra_files [EXTRA_FILES ...]] [--debug] [--args ...]
+>programmify --help
+usage: programmify [-h] [--name NAME] [--dst DST] [--icon ICON] [--mode MODE] [--nocleanup] [--show_cmd] [--cmd CMD] [--hidden_imports [HIDDEN_IMPORTS ...]]
+                   [--extra_files [EXTRA_FILES ...]] [--debug] [--args ...] [--desktop] [--version VERSION]
                    file
 
 positional arguments:
-  file                  File to build. If not specified, will try ... 
-                            1. main.py in current working directory if found 
-                            2. __main__.py 
-                            3. the only .py file in the current working directory if only one is found (excluding __init__.py) 
-                            4. if there is a src directory, will search in src and its subdirectories to find a single option 
-                            5. if the above fails, will raise an error and you will need to specify the file to build.
+  file                  File to build. If not specified, will try ... 1. main.py in current working directory if found 2. __main__.py 3. the only .py file in the
+                        current working directory if only one is found (excluding __init__.py) 4. if there is a src directory, will search in src and its
+                        subdirectories to find a single option 5. if the above fails, will raise an error and you will need to specify the file to build.
 
 options:
   -h, --help            show this help message and exit
   --name NAME           Program name. If not specified, the name of the either the file or its parent directory will be used.
   --dst DST             Destination directory for the built program
-  --icon ICON           Path to a 16x16 .ico file. If not specified, will try to find favicon.ico or any other .ico or .png in the current working directory.      
+  --icon ICON           Path to a 16x16 .ico file. If not specified, will try to find favicon.ico or any other .ico or .png in the current working directory.
   --mode MODE           Program mode: window or widget
   --nocleanup           Cleanup build files
-  --nopreclean          Preclean build files
   --show_cmd            Show the command that will be run instead of running it
   --cmd CMD             Expert level: command to run instead of pyinstaller
   --hidden_imports [HIDDEN_IMPORTS ...]
@@ -118,6 +122,8 @@ options:
                         Extra files to include
   --debug               Does not run in windowed mode, instead shows the terminal and stdout
   --args ...            Additional arguments to pass to pyinstaller
+  --desktop             Copy the file to the desktop
+  --version VERSION     Adds the version string to the end of the program name. e.g. --version 1 => my_program v1
 ```
 
 <hr/>
