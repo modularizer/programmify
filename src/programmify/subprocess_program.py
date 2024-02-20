@@ -1,12 +1,13 @@
+import multiprocessing
 import os
 import signal
 import subprocess
-import threading
 import time
 from pathlib import Path
+import tempfile
+from contextlib import redirect_stdout
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-
 from programmify.programmify import ProgrammifyWidget
 
 
@@ -16,8 +17,10 @@ class ProcessThread(QtCore.QThread):
     pid_signal = QtCore.pyqtSignal(int)
     exit_signal = QtCore.pyqtSignal(int)
 
+
+class SubprocessThread(ProcessThread):
     def __init__(self, cmd, cwd=None, parent=None):
-        super(ProcessThread, self).__init__(parent)
+        super().__init__(parent)
         self.cmd = cmd
         self.cwd = cwd
 
@@ -25,7 +28,6 @@ class ProcessThread(QtCore.QThread):
         self.process = subprocess.Popen(self.cmd, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         creationflags=subprocess.CREATE_NO_WINDOW)
         self.pid_signal.emit(self.process.pid)
-        exit_code = None
         while True:
             output = self.process.stdout.readline()
             exit_code = self.process.poll()
@@ -41,12 +43,41 @@ class ProcessThread(QtCore.QThread):
         self.exit_signal.emit(exit_code)
 
 
-class SubprocessWidget(ProgrammifyWidget):
-    def __init__(self, cmd, cwd=Path.cwd(), stay_open=False, name: str = None, icon: str = None, **kw):
-        if isinstance(cmd, str):
-            cmd = [v.strip() for v in cmd.split(" ") if v.strip()]
-        self.cmd = cmd
-        self.cwd = cwd
+def wrapper(func, fname, *args, **kwargs):
+    with open(fname, 'w') as f:
+        with redirect_stdout(f):  # FIXME: redirect_stderr as well
+            return func(*args, **kwargs)
+
+
+class MultiprocessThread(ProcessThread):
+    def __init__(self, target, args=None, kwargs=None, parent=None):
+        super().__init__(parent)
+        self.target = target
+        self.args = args or ()
+        self.kwargs = kwargs or {}
+
+    def run(self):
+        with tempfile.NamedTemporaryFile(delete=False, mode='rb') as f:
+            self.process = multiprocessing.Process(target=wrapper, args=tuple([self.target, f.name] + list(self.args)),
+                                                   kwargs=self.kwargs)
+            self.process.start()
+            self.pid_signal.emit(self.process.pid)
+            while True:
+                output = f.readline()
+                if (not output) and (not self.process.is_alive()):
+                    break
+                self.output_signal.emit(output.decode().strip())
+                time.sleep(1)
+            self.process.join()
+            exit_code = self.process.exitcode
+            if exit_code != 0:
+                # FIXME: read the error from the process
+                self.error_signal.emit(f"Process exited with code {exit_code}")
+            self.exit_signal.emit(exit_code)
+
+
+class ProcessWidget(ProgrammifyWidget):
+    def __init__(self, stay_open=False, name: str = None, icon: str = None, **kw):
         self.pid = None
         self.exit_code = None
         self.stay_open = stay_open
@@ -83,7 +114,7 @@ class SubprocessWidget(ProgrammifyWidget):
         self.setLayout(layout)
 
         # Instantiate and start ProcessThread
-        self.process_thread = ProcessThread(self.cmd, self.cwd)
+        self.process_thread = self.make_thread()
         self.process_thread.output_signal.connect(self.handle_stdout)
         self.process_thread.error_signal.connect(self.handle_stderr)
         self.process_thread.pid_signal.connect(self.handle_pid)
@@ -153,12 +184,28 @@ class SubprocessWidget(ProgrammifyWidget):
             if error:
                 self.handle_stderr(error.strip().decode())
 
-    @classmethod
-    def run(cls, cmd, **kw):
-        app = QtWidgets.QApplication([])
-        widget = cls(cmd, **kw)
-        widget.show()
-        app.exec_()
+
+class SubprocessWidget(ProcessWidget):
+    def __init__(self, cmd, cwd=Path.cwd(), stay_open=False, name: str = None, icon: str = None, **kw):
+        if isinstance(cmd, str):
+            cmd = [v.strip() for v in cmd.split(" ") if v.strip()]
+        self.cmd = cmd
+        self.cwd = cwd
+        super().__init__(stay_open=stay_open, name=name, icon=icon, **kw)
+
+    def make_thread(self):
+        return SubprocessThread(self.cmd, self.cwd)
+
+
+class MultiprocessWidget(ProcessWidget):
+    def __init__(self, target, args=None, kwargs=None, stay_open=False, name: str = None, icon: str = None, **kw):
+        self.target = target
+        self.args = args or ()
+        self.kwargs = kwargs or {}
+        super().__init__(stay_open=stay_open, name=name, icon=icon, **kw)
+
+    def make_thread(self):
+        return MultiprocessThread(self.target, self.args, self.kwargs)
 
 
 def sample(start, stop, interval=1):
