@@ -176,4 +176,5 @@ programmify main.py --name count --extra-files count.py
 * Note: `pyinstaller` doesn't see that we are depending on the `count.py` to be included as well, so we must specify
 
 4. The output
+
 ![Subprocess Widget](https://raw.githubusercontent.com/modularizer/programmify/master/resources/count.gif)
