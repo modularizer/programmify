@@ -151,6 +151,7 @@ def count(start, stop, interval=1):
         print(i)
         sys.stdout.flush() # unfortunately, this is necessary to get the output to show up in the widget
         time.sleep(interval)
+    sys.stderr.flush()
         
 if __name__ == '__main__':
     start = int(sys.argv[1])
