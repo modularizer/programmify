@@ -25,62 +25,64 @@ Task Manager
 <hr/> 
 
 # Quickstart
-### 1. Install
-```commandline
-pip install programmify
-```
-OR git clone and run `pip install .` in the project directory
 
-### 2. Code
-import and use either `ProgrammifyWidget` or `ProgrammifyMainWindow` from `programmify` in your script
-```python
-# samples/sample_widget.py
-from PyQt5 import QtWidgets
+1. Make a new python project folder, let's call it `myprogram`
+2. Make a virtual environment if you want, or just use your system python
+3. Install `programmify`
+    ```commandline
+    pip install programmify
+    ```
+3. Make a new file in `myprogram`, let's call it `myapp.py`
+4. import and use either `ProgrammifyWidget` or `ProgrammifyMainWindow` from `programmify` in your script
+    ```python
+    # myprogram/myapp.py
+    from PyQt5 import QtWidgets
+    
+    from programmify import ProgrammifyWidget
+    
+    
+    class MyWidget(ProgrammifyWidget):
+        def setupUI(self):
+            # Create a layout
+            layout = QtWidgets.QVBoxLayout(self)
+    
+            # Add a label
+            label = QtWidgets.QLabel("Hello, Programmify!")
+            layout.addWidget(label)
+    
+            # Add a button
+            button = QtWidgets.QPushButton("Click Me")
+            button.clicked.connect(self.on_button_clicked)  # Connect to a method to handle the click event
+            layout.addWidget(button)
+    
+            # Set the layout on the QWidget
+            self.setLayout(layout)
+    
+        def on_button_clicked(self):
+            QtWidgets.QMessageBox.information(self, "Action", "Button was clicked!")
+    
+    
+    if __name__ == '__main__':
+        MyWidget.run()
+    ```
+6. Build the executable
 
-from programmify import ProgrammifyWidget
+    From command prompt in the project directory:
+    
+    **(venv) C:\Users\user\myprogram>** `programmify`
 
+NOTES:
+* If you have ONLY one .py file in the current working directory you don't need to specify the file to build, otherwise you may need to specify `programmify myapp.py`
+* include a `favicon.ico` in your current working directory to use as the icon for the program
 
-class MyWidget(ProgrammifyWidget):
-    def setupUI(self):
-        # Create a layout
-        layout = QtWidgets.QVBoxLayout(self)
-
-        # Add a label
-        label = QtWidgets.QLabel("Hello, Programmify!")
-        layout.addWidget(label)
-
-        # Add a button
-        button = QtWidgets.QPushButton("Click Me")
-        button.clicked.connect(self.on_button_clicked)  # Connect to a method to handle the click event
-        layout.addWidget(button)
-
-        # Set the layout on the QWidget
-        self.setLayout(layout)
-
-    def on_button_clicked(self):
-        QtWidgets.QMessageBox.information(self, "Action", "Button was clicked!")
-
-
-if __name__ == '__main__':
-    MyWidget.run()
-```
-
-3. Build
-```commandline
-programmify samples/sample_widget.py
-```
-**Optional**: add a `favicon.ico` in your current working directory to use as the icon for the program
-
-4. Run
-```commandline
-sample_widget
-```
+8. Run
+An executable should have been created at `myprogram/myapp.exe`, double click to run!
 
 <hr/> 
 
 ## Usage:
 ```commandline
-programmify testprogram.py --name testprogram --icon testicon.ico
+programmify myapp.py --name testprogram --icon testicon.ico
 ```
 
 ### Advanced usage:
