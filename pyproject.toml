@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "programmify"
-version = "0.0.3"
+version = "0.0.4"
 description = "Quickly make a windows executable with a system tray icon and an configurable (read empty) PyQT5 window"
 readme = "README.md"
 authors = [{ name = "Torin Halsted", email = "modularizer@gmail.com" }]

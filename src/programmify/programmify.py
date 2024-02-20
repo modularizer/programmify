@@ -11,6 +11,7 @@ cfg_file = Path(__file__).parent / "programmify.cfg"
 default_mode = "window"
 default_name = None
 
+
 def png_to_ico(png_path: str, ico_path: str = None, size: int = 16):
     png_path = str(Path(png_path).resolve())
     if ico_path is None:
@@ -170,6 +171,10 @@ def _build(file: str = None,
         if name in ["__main__", "main"]:
             name = Path(file).parent.name
 
+    if dst is None:
+        dst = Path.cwd() / f"{name}.exe"
+    dst = Path(dst).expanduser()
+
     if isinstance(hidden_imports, str):
         hidden_imports = [v.strip() for v in hidden_imports.replace(" ", ",").split(",")]
     if isinstance(extra_files, str):
@@ -178,13 +183,17 @@ def _build(file: str = None,
     if icon.endswith(".png"):
         icon = png_to_ico(icon)
 
+
+    # make a temporary config
     with open(cfg_file, "w") as f:
-        print("dumping", {"icon": icon, "name": name, "mode": mode})
-        f.write(yaml.dump({"icon": icon, "name": name, "mode": mode}))
+        print("dumping", {"name": name, "mode": mode})
+        f.write(yaml.dump({"name": name, "mode": mode}))
+    print(f"dumped to {cfg_file}: {cfg_file.read_text()}")
     if cmd is None:
         cmd = ["pyinstaller", "--onefile", "--windowed",
-               "--icon=favicon.ico", "--add-data", f"{icon};.",
-               "--add-data", f"{cfg_file};.",
+               "--distpath", str(dst.parent.resolve()),
+               f"--icon={icon}", "--add-data", f"{icon};programmify",
+               "--add-data", f"{cfg_file};programmify",
                "--add-data", f"{__file__};.",
                "--hidden-import", "setproctitle",
                "--hidden-import", "yaml"]
@@ -197,19 +206,16 @@ def _build(file: str = None,
         cmd.append(file)
     if args:
         cmd.extend(args)
-    return _build_from_cmd(cmd=cmd, name=name, dst=dst, cleanup=cleanup, preclean=preclean, show_cmd=show_cmd)
+    return _build_from_cmd(cmd, dst, cleanup=cleanup, preclean=preclean, show_cmd=show_cmd)
 
 
 def _build_from_cmd(cmd: list,
-                    name: str = default_name,
-                    dst: str = None,
+                    dst,
                     cleanup: bool = True,
                     preclean: bool = True,
                     show_cmd: bool = False
                     ):
-    if dst is None:
-        dst = Path.cwd() / f"{name}.exe"
-    dst = Path(dst).expanduser()
+
     if isinstance(cmd, str):
         cmd = [v.strip() for v in cmd.split(" ") if v.strip()]
     if show_cmd:
@@ -233,7 +239,7 @@ def _build_from_cmd(cmd: list,
         RED = "\033[91m"
         BOLD = "\033[1m"
         RESET = "\033[0m"
-        print(f"{RED}{BOLD}{name}{RESET}{RED} is already a valid command. Please choose a different name{RESET}.")
+        print(f"{RED}{BOLD}{dst.stem}{RESET}{RED} is already a valid command. Please choose a different name{RESET}.")
         sys.exit(1)
 
     # build
@@ -243,12 +249,8 @@ def _build_from_cmd(cmd: list,
         RED = "\033[91m"
         BOLD = "\033[1m"
         RESET = "\033[0m"
-        print(f"{RED}{BOLD}Failed to build {name}{RESET}{RED}. Please check the error message above ^{RESET}.")
+        print(f"{RED}{BOLD}Failed to build {dst}{RESET}{RED}. Please check the error message above ^{RESET}.")
         sys.exit(1)
-    exe = Path("dist") / f"{dst.stem}.exe"
-    if name:
-        shutil.copy(exe, dst)
-        exe = dst
 
     # cleanup
     if cleanup:
@@ -261,22 +263,24 @@ def _build_from_cmd(cmd: list,
         if cfg_file.exists():
             cfg_file.unlink()
 
-    print(f"Built {str(exe.resolve())}")
+    print(f"Built {dst}")
 
     GRAY = "\033[90m"
     RESET = "\033[0m"
 
-    print(f"""Built {str(exe.resolve())}
+    print(f"""Built {dst}
     
 To run the program:
-    a. Open your File Explorer and double-click the file {str(exe.resolve())}
-    b. Open a command prompt and run the command `{GRAY}{str(exe.resolve())}{RESET}
-    c. In the command prompt if you are in the same directory as the file, you can run `{GRAY}{exe.stem}{RESET}`
+    a. Open your File Explorer and double-click the file {dst}
+    b. Open a command prompt and run the command `{GRAY}{dst}{RESET}
+    c. In the command prompt if you are in the same directory as the file, you can run `{GRAY}{dst.stem}{RESET}`
 """)
 
 
 class Programmify:
     def __init__(self, name: str = default_name, icon: str = default_icon, **kwargs):
+        if name is None:
+            raise ValueError(f"Program name cannot be None: {cfg_file}, {cfg_file.read_text() if cfg_file.exists() else None}")
         super().__init__(**kwargs)
         self.trayIcon = QtWidgets.QSystemTrayIcon(self)
         self.name = self.set_name(name)
@@ -303,11 +307,12 @@ class Programmify:
         return self.icon, self.trayIcon, self.icon_path
 
     def set_name(self, title: str):
-        self.setWindowTitle(title)
-        if self.trayIcon:
-            self.trayIcon.setToolTip(title)
         self.name = title
-        setproctitle.setproctitle(title)
+        if title:
+            self.setWindowTitle(title)
+            if self.trayIcon:
+                self.trayIcon.setToolTip(title)
+            setproctitle.setproctitle(title)
         return self.name
 
     @classmethod
