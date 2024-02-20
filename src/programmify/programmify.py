@@ -12,7 +12,7 @@ default_mode = "window"
 default_name = None
 
 
-def png_to_ico(png_path: str, ico_path: str = None, size: int = 16):
+def png_to_ico(png_path: str, ico_path: str = None, size: int = 64):
     png_path = str(Path(png_path).resolve())
     if ico_path is None:
         # replace .png with .ico
@@ -32,7 +32,7 @@ def png2ico():
     parser = argparse.ArgumentParser()
     parser.add_argument("png_path", help="Path to the .png file")
     parser.add_argument("--ico_path", help="Path to the .ico file")
-    parser.add_argument("--size", default=16, help="Icon size")
+    parser.add_argument("--size", type=int, default=64, help="Icon size")
     args = parser.parse_args()
     png_to_ico(args.png_path, args.ico_path, args.size)
 
@@ -68,7 +68,8 @@ def detect_icon(folder=Path.cwd()):
 
 default_icon = detect_icon()
 
-
+if default_icon is None:
+    default_icon = detect_icon(Path(__file__).parent)
 if default_icon is None:
     default_icon = str(programmify_icon.resolve())
 
