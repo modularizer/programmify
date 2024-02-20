@@ -231,17 +231,11 @@ def _build_from_cmd(cmd: list,
     import subprocess
 
     # preclean
-    if cleanup:
-        shutil.rmtree("dist", ignore_errors=True)
-        shutil.rmtree("build", ignore_errors=True)
-        # remove all .spec files
-        for spec_file in Path.cwd().glob("*.spec"):
-            spec_file.unlink()
-        if dst.exists():
-            dst.unlink()
+    if cleanup and Path("build").exists():
+        raise Exception("Build directory exists. Please remove it before building or use flag --nocleanup. Trying to avoid deleting files that you may want to keep.")
 
     # verify the name is not already a valid command
-    if shutil.which(dst.stem):
+    if shutil.which(dst.stem) and not dst.exists():
         RED = "\033[91m"
         BOLD = "\033[1m"
         RESET = "\033[0m"
@@ -269,9 +263,9 @@ def _build_from_cmd(cmd: list,
         shutil.rmtree("dist", ignore_errors=True)
         shutil.rmtree("build", ignore_errors=True)
         # remove all .spec files
-        for spec_file in Path.cwd().glob("*.spec"):
-            spec_file.unlink()
-
+        spec_file = f"{Path(src.stem)}.spec"
+        if Path(spec_file).exists():
+            Path(spec_file).unlink()
         if cfg_file.exists():
             cfg_file.unlink()
 

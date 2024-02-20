@@ -71,19 +71,16 @@ Task Manager
 
     From command prompt in the project directory:
     
-    **(venv) C:\Users\user\myprogram>** `programmify`
+    **(venv) C:\Users\user\myprogram>** `programmify --desktop`
 
 NOTES:
 * If you have ONLY one .py file in the current working directory you don't need to specify the file to build, otherwise you may need to specify `programmify myapp.py`
 * include a `favicon.ico` in your current working directory to use as the icon for the program
+* `--desktop` will copy the executable to your desktop
 
 8. Run
-An executable should have been created at `myprogram/myapp.exe`, double click to run!
+An executable should have been created at `myprogram/myapp.exe` and also copied to your desktop. Double click to run!
 
-9. Add to desktop
-* just drag the `myapp.exe` to your desktop
-* double click to run
-* you can also pin it to your taskbar
 
 <hr/> 
 
@@ -103,9 +100,12 @@ usage: programmify [-h] [--name NAME] [--dst DST] [--icon ICON] [--mode MODE] [-
                    file
 
 positional arguments:
-  file                  File to build. If not specified, will try ... 1. main.py in current working directory if found 2. __main__.py 3. the only .py file in the
-                        current working directory if only one is found (excluding __init__.py) 4. if there is a src directory, will search in src and its
-                        subdirectories to find a single option 5. if the above fails, will raise an error and you will need to specify the file to build.
+  file                  File to build. If not specified, will try ... 
+                            1. main.py in current working directory if found 
+                            2. __main__.py 
+                            3. the only .py file in the current working directory if only one is found (excluding __init__.py) 
+                            4. if there is a src directory, will search in src and its subdirectories to find a single option 
+                            5. if the above fails, will raise an error and you will need to specify the file to build.
 
 options:
   -h, --help            show this help message and exit
