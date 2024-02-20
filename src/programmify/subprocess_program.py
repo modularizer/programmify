@@ -9,37 +9,6 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 from programmify.programmify import ProgrammifyWidget
 
-import subprocess
-import os
-import sys
-from ctypes import windll, byref, c_ulong, c_void_p
-
-# Only available on Windows
-if os.name == 'nt':
-    from ctypes.wintypes import DWORD, HANDLE
-
-    class STARTUPINFOEXW(subprocess.STARTUPINFO):
-        pass
-
-    def initialize_startup_info_ex(startupinfo):
-        size = c_ulong()
-        windll.kernel32.InitializeProcThreadAttributeList(None, 1, 0, byref(size))
-        startupinfo.lpAttributeList = windll.kernel32.HeapAlloc(windll.kernel32.GetProcessHeap(), 0, size.value)
-        windll.kernel32.InitializeProcThreadAttributeList(startupinfo.lpAttributeList, 1, 0, byref(size))
-
-        # Enable pseudo console support
-        PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = 0x00020016
-        windll.kernel32.UpdateProcThreadAttribute(
-            startupinfo.lpAttributeList,
-            0,
-            PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
-            c_void_p(0),  # Use an existing pseudo console or create a new one
-            c_ulong.sizeof(c_void_p),
-            None,
-            None
-        )
-
-
 
 class ProcessThread(QtCore.QThread):
     output_signal = QtCore.pyqtSignal(str)
@@ -51,18 +20,7 @@ class ProcessThread(QtCore.QThread):
         self.cwd = cwd
 
     def run(self):
-        startupinfo = STARTUPINFOEXW()
-        startupinfo.StartupInfo.cb = subprocess.sizeof(startupinfo)
-        initialize_startup_info_ex(startupinfo)
-
-        self.process = subprocess.Popen(
-            self.cmd,
-            cwd=self.cwd,
-            startupinfo=startupinfo.StartupInfo,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            creationflags=subprocess.EXTENDED_STARTUPINFO_PRESENT
-        )
+        self.process = subprocess.Popen(self.cmd, cwd=self.cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
         while True:
             output = self.process.stdout.readline()
             if not output and self.process.poll() is not None:
