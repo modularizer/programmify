@@ -118,7 +118,7 @@ options:
   --cmd CMD             Expert level: command to run instead of pyinstaller
   --hidden_imports [HIDDEN_IMPORTS ...]
                         Hidden imports
-  --extra_files [EXTRA_FILES ...]
+  --extra-files [EXTRA_FILES ...]
                         Extra files to include
   --debug               Does not run in windowed mode, instead shows the terminal and stdout
   --args ...            Additional arguments to pass to pyinstaller
@@ -131,3 +131,49 @@ options:
 ### Other Installed Scripts
 * `png2ico` to convert a `.png` to a `.ico` file
   * see `png2ico --help` for usage
+
+<hr/>
+
+# Uses
+
+#### Subprocess Widget
+
+Run any subprocess command (bash) and display a live feed of stdout and stderr in a PyQT5 widget.
+
+1. The program which gets called
+```python
+# count.py
+import time
+import sys
+
+def count(start, stop, interval=1):
+    for i in range(start, stop):
+        print(i)
+        sys.stdout.flush() # unfortunately, this is necessary to get the output to show up in the widget
+        time.sleep(interval)
+        
+if __name__ == '__main__':
+    start = int(sys.argv[1])
+    stop = int(sys.argv[2])
+    interval = int(sys.argv[3])
+    count(start, stop, interval)
+```
+
+2. The application which makes the widget and runs the subprocess command
+```python
+# main.py
+from programmify import SubprocessWidget
+
+if __name__ == '__main__':
+    cmd = ["python", "count.py", '1000', '1010', '1']
+    SubprocessWidget.run(cmd=cmd)
+```
+
+3. Build the executable
+```commandline
+programmify main.py --name count --extra-files count.py
+```
+* Note: `pyinstaller` doesn't see that we are depending on the `count.py` to be included as well, so we must specify
+
+4. The output
+![Subprocess Widget](https://raw.githubusercontent.com/modularizer/programmify/master/resources/count.gif)

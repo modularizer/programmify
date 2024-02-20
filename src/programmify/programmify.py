@@ -206,7 +206,7 @@ def _build(file: str = None,
         if not windowed:
             cmd.remove("--windowed")
         for extra_file in extra_files or []:
-            cmd.extend(["--add-data", f"{extra_file};programmify"])
+            cmd.extend(["--add-data", f"{extra_file};."])
         for hidden_import in hidden_imports or []:
             cmd.extend(["--hidden-import", hidden_import])
         cmd.append(file)
