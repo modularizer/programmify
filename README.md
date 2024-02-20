@@ -159,6 +159,10 @@ if __name__ == '__main__':
     count(start, stop, interval)
 ```
 
+### BUG
+IMPORTANT: `sys.stdout.flush()` is necessary to get the output to show up in the widget.
+This is a bug I am working on fixing. It is not necessary when running main.py directly, only when running the executable.
+
 2. The application which makes the widget and runs the subprocess command
 ```python
 # main.py
