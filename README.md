@@ -183,3 +183,44 @@ programmify main.py --name count --extra-files count.py
 4. The output
 
 ![Subprocess Widget](https://raw.githubusercontent.com/modularizer/programmify/master/resources/count.gif)
+
+<hr/>
+
+### Why does the exutable show up as a virus?
+
+This is a known issue with Windows Defender and other antivirus software. 
+It is a false positive. 
+You can add the executable to the exceptions list in Windows Defender or your antivirus software, and you can report the false positive to the antivirus software company.
+
+* [Medium Article #1](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7)
+  * [GitHub](https://github.com/hankhank10/false-positive-malware-reporting)
+* [Medium Article #2](https://python.plainenglish.io/pyinstaller-exe-false-positive-trojan-virus-resolved-b33842bd3184)
+* [Stack Overflow](https://stackoverflow.com/questions/52054451/why-does-windows-defender-say-my-pyinstaller-exe-is-a-virus)
+
+### Possible solutions
+1. Report the false positive to the antivirus software company
+   * [Windows Defender](https://www.microsoft.com/en-us/wdsi/filesubmission)
+2. Build bootloader of PyInstaller from source
+    * [PyInstaller Bootloader](https://pyinstaller.readthedocs.io/en/stable/bootloader-building.html)
+    
+
+3. Sign the executable (costs money and have to build reputation)
+4. Manually allow file through Windows Defender
+    * After downloading the exucatable and it is blocked, open Windows Defender and go to "Protection History", find the blocked file, and click "Actions" and then "Allow", then re-download
+
+
+#### Windows build pyinstaller bootloader from source using Visual Studio
+In an Administrator Windows Powershell:
+* Install [Chocolatey](https://chocolatey.org/install)
+* Install Visual Studio Build Tools
+
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco install -y python3 visualstudio2019-workload-vctools
+choco install git -y
+git clone https://github.com/pyinstaller/pyinstaller.git
+cd pyinstaller\bootloader
+python ./waf all
+```
+

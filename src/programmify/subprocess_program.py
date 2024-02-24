@@ -45,8 +45,11 @@ class SubprocessThread(ProcessThread):
 
 def wrapper(func, fname, *args, **kwargs):
     with open(fname, 'w') as f:
-        with redirect_stdout(f):  # FIXME: redirect_stderr as well
-            return func(*args, **kwargs)
+        try:
+            with redirect_stdout(f):  # FIXME: redirect_stderr as well
+                return func(*args, **kwargs)
+        except Exception as e:
+            f.write(str(e))
 
 
 class MultiprocessThread(ProcessThread):
