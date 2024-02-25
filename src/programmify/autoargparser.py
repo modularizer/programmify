@@ -149,7 +149,6 @@ def autoargparser(func=None, doc_func=None, improve=True, **defaults):
 
 
         # call the function with the parsed args
-        print("Calling", call_func.__name__, "with", args, kwargs)
         r = call_func(*args, **kwargs)
         if r is not None:
             print(r)
