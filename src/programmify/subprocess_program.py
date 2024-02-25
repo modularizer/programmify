@@ -4,8 +4,7 @@ import signal
 import subprocess
 import time
 from pathlib import Path
-import tempfile
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from programmify.programmify import ProgrammifyWidget
@@ -43,16 +42,32 @@ class SubprocessThread(ProcessThread):
         self.exit_signal.emit(exit_code)
 
 
-def wrapper(func, fname, *args, **kwargs):
-    with open(fname, 'w') as f:
-        try:
-            with redirect_stdout(f):  # FIXME: redirect_stderr as well
-                return func(*args, **kwargs)
-        except Exception as e:
-            f.write(str(e))
+
+
+def wrapper(func, stdout_write, stderr_write, *args, **kwargs):
+    # redirect stdout and stderr to the pipes
+    class stdout_writer:
+        def write(self, data):
+            stdout_write.send(data)
+
+        def flush(self):
+            pass
+
+    class stderr_writer:
+        def write(self, data):
+            stderr_write.send(data)
+
+        def flush(self):
+            pass
+
+    with redirect_stdout(stdout_writer()):
+        with redirect_stderr(stderr_writer()):
+            return func(*args, **kwargs)
 
 
 class MultiprocessThread(ProcessThread):
+    stdout_read, stdout_write = multiprocessing.Pipe()
+    stderr_read, stderr_write = multiprocessing.Pipe()
     def __init__(self, target, args=None, kwargs=None, parent=None):
         super().__init__(parent)
         self.target = target
@@ -60,23 +75,29 @@ class MultiprocessThread(ProcessThread):
         self.kwargs = kwargs or {}
 
     def run(self):
-        with tempfile.NamedTemporaryFile(delete=False, mode='rb') as f:
-            self.process = multiprocessing.Process(target=wrapper, args=tuple([self.target, f.name] + list(self.args)),
-                                                   kwargs=self.kwargs)
-            self.process.start()
-            self.pid_signal.emit(self.process.pid)
-            while True:
-                output = f.readline()
-                if (not output) and (not self.process.is_alive()):
-                    break
-                self.output_signal.emit(output.decode().strip())
-                time.sleep(1)
-            self.process.join()
-            exit_code = self.process.exitcode
-            if exit_code != 0:
-                # FIXME: read the error from the process
-                self.error_signal.emit(f"Process exited with code {exit_code}")
-            self.exit_signal.emit(exit_code)
+        self.process = multiprocessing.Process(target=wrapper, args=tuple([self.target, self.stdout_write, self.stderr_write] + list(self.args)),
+                                               kwargs=self.kwargs)
+        self.process.start()
+        self.pid_signal.emit(self.process.pid)
+        while True:
+            if self.stdout_read.poll():  # Check if data is available
+                output = self.stdout_read.recv()  # Now safe to call recv
+                self.output_signal.emit(output.strip())
+            else:
+                # No data available, can handle this case as needed
+                pass
+
+            if not self.process.is_alive():
+                break
+
+            time.sleep(0.1)  # A short sleep to prevent tight looping
+        self.process.join()
+        exit_code = self.process.exitcode
+        if exit_code != 0:
+            error = self.stderr_read.recv()
+            self.error_signal.emit(error.strip())
+            self.error_signal.emit(f"Process exited with code {exit_code}")
+        self.exit_signal.emit(exit_code)
 
 
 class ProcessWidget(ProgrammifyWidget):
@@ -126,11 +147,17 @@ class ProcessWidget(ProgrammifyWidget):
 
     def handle_stdout(self, data):
         # Add data to the QTextEdit widget
-        self.output_display.append(data)
+        if data.endswith("\n"):
+            data = data[:-1]
+        if data:
+            self.output_display.append(data)
 
     def handle_stderr(self, error):
         # Add error to the QTextEdit widget
-        self.output_display.append(error)
+        if error.endswith("\n"):
+            error = error[:-1]
+        if error:
+            self.output_display.append(error)
 
     def handle_pid(self, pid):
         self.pid = pid

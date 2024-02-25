@@ -195,7 +195,7 @@ You can add the executable to the exceptions list in Windows Defender or your an
 * [Medium Article #1](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7)
   * [GitHub](https://github.com/hankhank10/false-positive-malware-reporting)
 * [Medium Article #2](https://python.plainenglish.io/pyinstaller-exe-false-positive-trojan-virus-resolved-b33842bd3184)
-* [Stack Overflow](https://stackoverflow.com/questions/52054451/why-does-windows-defender-say-my-pyinstaller-exe-is-a-virus)
+* [Stack Overflow](https://stackoverflow.com/questions/64788656/exe-file-made-with-pyinstaller-being-reported-as-a-virus-threat-by-windows-defen)
 
 ### Possible solutions
 1. Report the false positive to the antivirus software company

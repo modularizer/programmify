@@ -3,6 +3,7 @@ from programmify import ProgrammifyMainWindow
 
 class MyWindow(ProgrammifyMainWindow):
     def setupUI(self):
+        print("called setupUI")
         # Example: Setup a simple menu bar with one menu
         menu_bar = self.menuBar()  # QMainWindow's menu bar
         file_menu = menu_bar.addMenu("&File")
